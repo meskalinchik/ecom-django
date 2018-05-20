@@ -6,8 +6,7 @@ from django.http import HttpResponseRedirect, JsonResponse
 from django.core.urlresolvers import reverse
 from django.contrib.auth import login, authenticate
 from ecomapp.forms import OrderForm, RegistrationForm, LoginForm
-from ecomapp.models import Category, Product, CartItem, Cart, Order, NotificationModel
-from notifications.models import Notification
+from ecomapp.models import Category, Product, CartItem, Cart, Order
 from django.views.generic import View
 from django.contrib.auth.models import User
 
@@ -45,24 +44,13 @@ def product_view(request, product_slug):
 		request.session['cart_id'] = cart_id
 		cart = Cart.objects.get(id=cart_id)
 	product = Product.objects.get(slug=product_slug)
-	try:
-		notification_if_not_available = NotificationModel.objects.get(user=request.user, product=product)
-		categories = Category.objects.all()
-		context = {
-			'product': product,
-			'categories': categories,
-			'cart': cart,
-			'notification_if_not_available': notification_if_not_available,
-		}
-		return render(request, 'product.html', context)
-	except NotificationModel.DoesNotExist:
-		categories = Category.objects.all()
-		context = {
-			'product': product,
-			'categories': categories,
-			'cart': cart,
-		}
-		return render(request, 'product.html', context)
+	categories = Category.objects.all()
+	context = {
+		'product': product,
+		'categories': categories,
+		'cart': cart,
+	}
+	return render(request, 'product.html', context)
 
 
 def category_view(request, category_slug):
@@ -299,48 +287,3 @@ def login_view(request):
 		'categories': categories
 	}
 	return render(request, 'login.html', context)
-
-class NotificationHandler(View):
-
-	def get(self, request, *args, **kwargs):
-		actor_object_ids = self.request.GET.getlist('content_ids[]')
-		notification_ids = list(set([int(act_obj_id) for act_obj_id in actor_object_ids]))
-		notifications = Notification.objects.filter(
-			actor_object_id__in=notification_ids, 
-			recipient=User.objects.get(username=self.request.user).id)
-		data = []
-		for notification in notifications:
-			data.append(
-				{'actor_object_id': 
-				notification.actor_object_id, 
-				'verb': notification.verb, 
-				'url': notification.target_content_type.model_class().objects.get(id=notification.target_object_id).get_absolute_url()})
-		return JsonResponse(data, safe=False)
-
-class NotificationRemover(View):
-
-	def get(self, request, *args, **kwargs):
-		curr_not = int(self.request.GET.getlist('curr_not[]')[0])
-		notification = Notification.objects.get(actor_object_id=curr_not, recipient=User.objects.get(username=self.request.user).id)
-		notification.unread = False
-		notification.save()
-		article = notification.target_content_type.model_class().objects.get(id=notification.target_object_id)
-		return JsonResponse({'ok': 'ok'})
-
-
-class DeleteAllNotificationsView(View):
-
-	def get(self, request, *args, **kwargs):
-		notifications = Notification.objects.filter(recipient=request.user.id)
-		for obj in notifications:
-			obj.delete()
-		return JsonResponse({'ok': 'ok'})
-
-
-
-def notification_accept_view(request):
-	product_slug = request.GET.get('product_slug')
-	product = Product.objects.get(slug=product_slug)
-	new_notification, _ = NotificationModel.objects.get_or_create(user=request.user, product=product, notify_accepted=True)
-	return JsonResponse({'notify_accepted': 'true'})
-

@@ -43,22 +43,8 @@ def image_folder(instance, filename):
 	return "{0}/{1}".format(instance.slug, filename)
 
 
-class SearchProductQuerySet(models.QuerySet):
-
-	def by_brand(self, brand_name=None, category_name=None):
-		qs = self
-		print(dir(qs))
-		if brand_name:
-			return qs.filter(brand__name__icontains=brand_name)
-		if category_name:
-			return qs.filter(category__name=category_name)
-
-
 
 class ProductManager(models.Manager):
-
-	def get_queryset(self):
-		return SearchProductQuerySet(self.model, using=self._db)
 
 	def all(self):
 		return super(ProductManager, self).get_queryset().filter(available=True)
@@ -81,22 +67,6 @@ class Product(models.Model):
 	def get_absolute_url(self):
 		return reverse('product_detail', kwargs={'product_slug': self.slug})
 
-def product_available_notify(sender, instance, created, **kwargs):
-	try:
-		product_available = NotificationModel.objects.get(user=User.objects.get(pk=1))
-		if product_available.product.available:
-		    notify.send(
-		    	instance,
-		    	recipient=User.objects.get(pk=1), 
-		    	description='Появился товар, который вы ждете - {0}'.format(instance.title),
-		    	target=instance,
-		    	verb='Появился товар, который вы ждете - "{0}"'.format(instance.title))
-		    product_available.notified = True
-		    product_available.save()
-	except NotificationModel.DoesNotExist:
-		pass
-
-post_save.connect(product_available_notify, sender=Product)
 
 class CartItem(models.Model):
 
@@ -167,19 +137,3 @@ class Order(models.Model):
 
 	def __unicode__(self):
 		return "Заказ №{0}".format(str(self.id))
-
-
-
-
-class NotificationModel(models.Model):
-
-	user = models.ForeignKey(settings.AUTH_USER_MODEL)
-	product = models.ForeignKey(Product)
-	notified = models.BooleanField(default=False)
-	notify_accepted = models.BooleanField(default=False)
-
-	def __unicode__(self):
-		return "Notification for {0} about stock of {1}".format(
-			self.user.username, 
-			self.product.title
-		)

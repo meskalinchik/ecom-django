@@ -15,11 +15,7 @@ from ecomapp.views import (
 	make_order_view,
 	account_view,
 	registration_view,
-	login_view,
-	NotificationHandler, 
-	NotificationRemover, 
-	DeleteAllNotificationsView,
-	notification_accept_view
+	login_view
 	)
 
 urlpatterns = [
@@ -37,9 +33,5 @@ urlpatterns = [
 	url(r'^registration/$', registration_view, name='registration'),
 	url(r'^login/$', login_view, name='login'),
 	url(r'^logout/$', LogoutView.as_view(next_page=reverse_lazy('base')), name='logout'),
-	url(r'^notify_accepted/$', notification_accept_view, name='notify_accept'),
-	url(r'^notify_handler/$', NotificationHandler.as_view(), name='notify_handle'),
-	url(r'^notify_remove/$', NotificationRemover.as_view(), name='notify_remove'),
-	url(r'^delete_notifications/$', DeleteAllNotificationsView.as_view(), name='delete_notifications'),
 	url(r'^$', base_view, name='base'),
 ]
