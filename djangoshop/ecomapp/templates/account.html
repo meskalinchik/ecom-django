@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<h3 class="text-center">Личный кабинет пользователя {{ request.user }}</h3>
+<hr>
+<h4 class='text-center'>Ваши заказы</h4>
+<table class='table'>
+<tr style='background:lightblue;'>
+	<td class='text-center'>Номер заказа</td>
+	<td class='text-center'>Дата заказа</td>
+	<td class='text-center'>Статус заказа</td>
+	<td class='text-center'>Стоимость заказа</td>
+	<td class='text-center'>Детали заказа</td>
+	<td></td>
+</tr>
+{% for item in order %}
+<tr>
+	<td class='text-center' style='padding-top: 20px; padding-bottom: 20px;'>{{ item.id }}</td>
+	<td class='text-center' style='padding-top: 20px; padding-bottom: 20px;'>{{ item.date }}</td>
+	<td class='text-center' style='padding-top: 20px; padding-bottom: 20px;'>{{ item.status }}</td>
+	<td class='text-center' style='padding-top: 20px; padding-bottom: 20px;'>{{ item.total }} руб.</td>
+	<td class='text-center' style='padding-top: 20px; padding-bottom: 20px;'><button type="button" class="btn btn-primary btn-md" data-toggle="modal" data-target="#myModal-{{ item.id }}">
+  Детали заказа
+</button></td>
+</tr>
+{% endfor %}
+</table>
+<!-- Button trigger modal -->
+
+<!-- Modal -->
+{% for item in order %}
+<div class="modal fade" id="myModal-{{ item.id }}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Заказ № {{ item.id }}</h4>
+      </div>
+      <div class="modal-body">
+      <h3>Товар</h3>
+        <table class='table'>
+        	{% for order_item in item.items.items.all %}
+	        	<tr>
+	       			<td>{{ order_item.product.title }}</td>
+	       			<td>{{ order_item.qty }} шт.</td>
+	       			<td>{{ order_item.item_total }} руб.</td>
+	        	</tr>
+        	{% endfor %}
+        		 <tr>
+	        		<td></td>
+	        		<td>Итого</td>
+	        		<td><strong>{{ item.items.cart_total }} руб.</strong></td>
+	        	</tr>
+        </table>
+   		<h3>Заказчик</h3>
+   		 <p>Имя: {{ item.first_name }}</p>
+   		 <p>Фамилия: {{ item.last_name }}</p>
+   		 <p>Телефон: {{ item.phone }}</p>
+   		 <h3>Тип доставки</h3>
+   		 <p>{% if item.buying_type == 'self' %} Самовывоз {% else %}Доставка{% endif %}</p>
+   		 <p>{% if item.buying_type == 'delivery' %} {{ item.address }}{% endif %}</p>
+   		 <h3>Комментарии к заказу</h3>
+   		 <p>{{ item.comments }}</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endblock content %}

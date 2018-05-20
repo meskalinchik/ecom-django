@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block content %}
+<h3 class='text-center'>Оформление заказа</h3>
+<hr>
+<form action='{% url "make_order" %}' method="POST">
+{% csrf_token %}
+<div class='col-sm-4'>
+	{{ form.name|as_crispy_field }}
+</div>
+<div class='col-sm-4'>
+	{{ form.last_name|as_crispy_field }}
+</div>
+<div class='col-sm-4'>
+	{{ form.phone|as_crispy_field }}
+</div>
+{{ form.buying_type|as_crispy_field }}
+{{ form.address|as_crispy_field }}
+{{ form.date|as_crispy_field }}
+{{ form.comments|as_crispy_field }}
+<input type='submit' class='btn btn-success' value='Оформить заказ'>
+</form>
+<script src="{% static 'js/jquery.js' %}"></script>
+<script>
+	$(document).ready(function(){
+		$('#div_id_address').css('display', 'none')
+		$('#id_buying_type').on('click', function(){
+			buying_type = $(this).val()
+			if(buying_type == 'delivery'){
+				$('#div_id_address').css('display', 'block')
+			}else{
+				$('#div_id_address').css('display', 'none')
+			}
+		})
+		$('#id_date_month').css('width', '100px')
+		$('#id_date_month').css('display', 'inline')
+		$('#id_date_year').css('width', '100px')
+		$('#id_date_year').css('display', 'inline')
+		$('#id_date_day').css('width', '50px')
+		$('#id_date_day').css('display', 'inline')
+	})
+
+</script>
+{% endblock content %}
