@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.contrib import admin
-from ecomapp.models import Category, Brand, Product, CartItem, Cart, Order, NotificationModel
+from ecomapp.models import Category, Brand, Product, CartItem, Cart, Order
 
 
 def make_payed(modeladmin, request, queryset):
@@ -19,4 +19,3 @@ admin.site.register(Product)
 admin.site.register(CartItem)
 admin.site.register(Cart)
 admin.site.register(Order, OrderAdmin)
-admin.site.register(NotificationModel)
