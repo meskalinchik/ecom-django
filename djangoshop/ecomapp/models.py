@@ -47,17 +47,6 @@ def image_folder(instance, filename):
 	return "{0}/{1}".format(instance.slug, filename)
 
 
-class ProductImageThumbnails(models.Model):
-
-	product = models.ForeignKey('Product')
-	thumbnail1 = models.ImageField()
-	thumbnail2 = models.ImageField()
-	thumbnail3 = models.ImageField()
-
-	def __unicode__(self):
-		return self.product.title + ' images'
-
-
 class Product(models.Model):
 
 	category = models.ForeignKey(Category)
@@ -74,12 +63,7 @@ class Product(models.Model):
 
 	def get_absolute_url(self):
 		return reverse('product_detail', kwargs={'product_slug': self.slug})
-
-
-	def save(self, *args, **kwargs):
-
-		super(Product, self).save(*args, **kwargs)
-
+		
 
 def product_available_notification(sender, instance, *args, **kwargs):
 	if instance.available:
