@@ -10,6 +10,10 @@ from django.core.urlresolvers import reverse
 from transliterate import translit
 from notifications.signals import notify
 from django.contrib.auth.models import User
+from PIL import Image
+import os
+import glob
+
 
 class Category(models.Model):
 
@@ -43,11 +47,16 @@ def image_folder(instance, filename):
 	return "{0}/{1}".format(instance.slug, filename)
 
 
+class ProductImageThumbnails(models.Model):
 
-class ProductManager(models.Manager):
+	product = models.ForeignKey('Product')
+	thumbnail1 = models.ImageField()
+	thumbnail2 = models.ImageField()
+	thumbnail3 = models.ImageField()
 
-	def all(self):
-		return super(ProductManager, self).get_queryset().filter(available=True)
+	def __unicode__(self):
+		return self.product.title + ' images'
+
 
 class Product(models.Model):
 
@@ -59,13 +68,36 @@ class Product(models.Model):
 	image = models.ImageField(upload_to=image_folder)
 	price = models.DecimalField(max_digits=9, decimal_places=2)
 	available = models.BooleanField(default=True)
-	objects = ProductManager()
 
 	def __unicode__(self):
 		return self.title
 
 	def get_absolute_url(self):
 		return reverse('product_detail', kwargs={'product_slug': self.slug})
+
+
+	def save(self, *args, **kwargs):
+
+		super(Product, self).save(*args, **kwargs)
+
+
+def product_available_notification(sender, instance, *args, **kwargs):
+	if instance.available:
+		await_for_notify = [notification for notification in MiddlwareNotification.objects.filter(
+			product=instance)]
+		for notification in await_for_notify:
+			notify.send(
+				instance,
+				recipient=[notification.user_name],
+				verb='Уважаемый {0}! {1}, который Вы ждете, поступил'.format(
+					notification.user_name.username,
+					instance.title),
+				description=instance.slug
+				)
+			notification.delete()
+
+
+post_save.connect(product_available_notification, sender=Product)	
 
 
 class CartItem(models.Model):
@@ -90,7 +122,8 @@ class Cart(models.Model):
 		cart = self
 		product = Product.objects.get(slug=product_slug)
 		new_item, _ = CartItem.objects.get_or_create(product=product, item_total=product.price)
-		if new_item not in cart.items.all():
+		cart_items = [item.product for item in cart.items.all()]
+		if new_item.product not in cart_items:
 			cart.items.add(new_item)
 			cart.save()
 
@@ -137,3 +170,18 @@ class Order(models.Model):
 
 	def __unicode__(self):
 		return "Заказ №{0}".format(str(self.id))
+
+
+
+
+class MiddlwareNotification(models.Model):
+
+	user_name = models.ForeignKey(settings.AUTH_USER_MODEL)
+	product = models.ForeignKey(Product)
+	is_notified = models.BooleanField(default=False)
+
+	def __unicode__(self):
+		return "Нотификация для пользователя {0} о поступлении товара {1}".format(
+	   	self.user_name.username, 
+	   	self.product.title
+	   	)

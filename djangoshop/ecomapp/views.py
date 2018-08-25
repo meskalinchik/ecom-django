@@ -65,6 +65,8 @@ def category_view(request, category_slug):
 		request.session['cart_id'] = cart_id
 		cart = Cart.objects.get(id=cart_id)
 	category = Category.objects.get(slug=category_slug)
+	price_filter_type = request.GET.get('price_filter_type')
+	print price_filter_type
 	products_of_category = Product.objects.filter(category=category)
 	context = {
 		'category': category,
@@ -72,6 +74,8 @@ def category_view(request, category_slug):
 		'cart': cart
 	}
 	return render(request, 'category.html', context)
+
+
 
 
 def cart_view(request):
