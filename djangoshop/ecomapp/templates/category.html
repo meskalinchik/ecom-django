@@ -5,16 +5,6 @@
 <h2>{{ category.name }}</h2>
 <hr>
 <div class='col-sm-12'>
-<div class='col-sm-4'>
-<h4>Фильтр товара</h4>
-<h5>По цене</h5>
-<form action='{% url "category_detail" %}' method='GET' onchange="submit()">
-<select id='filter-by-price'>
-	<option value='asc' name='asc'>По возрастанию</option>
-	<option value='desc' name='desc'>По убыванию</option>
-</select>
-</form>
-</div>
 <div class='col-sm-8'>
 {% for product in products_of_category %}
 <div class='col-sm-4' style='height: 400px;'>
@@ -48,24 +38,5 @@ $(document).ready(function(){
 		})
 	})
 })
-</script>
-<script>
-	$(document).ready(function(){
-		$('#filter-by-price').on('click', function(){
-			price_filter_type = $(this).val()
-			data = {
-				price_filter_type: price_filter_type
-			}
-			$.ajax({
-				type:"GET",
-				url: '{% url "category_detail" %}',
-				data: data,
-				success: function(data){
-					console.log(data)
-				}
-			})
-		})
-	})
-
 </script>
 {% endblock content %}
